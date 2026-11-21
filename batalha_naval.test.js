@@ -63,3 +63,49 @@ for(const d of ['D','h','v','',null,1]) test(`direção ${String(d)} é rejeitad
 test('sobreposição horizontal/vertical e duplicação de tipo são rejeitadas',()=>{
   const t=new Tabuleiro();t.posicionar('portaAvioes',0,0);rejeita(t,()=>t.posicionar('submarino',2,0,'V'));rejeita(t,()=>t.posicionar('encouracado',1,0,'H'));rejeita(t,()=>t.posicionar('portaAvioes',0,2));
 });
+test('adjacência não é sobreposição: quatro navios podem ocupar linhas vizinhas',()=>{
+  const t=preparar();assert.equal(t.pronto,true);assert.equal(t.derrotado,false);assert.equal(new Set([...t.navios.values()].flatMap(n=>[...n.casas])).size,14);
+});
+test('pronto só fica true ao completar os quatro tipos',()=>{
+  const t=new Tabuleiro();Object.keys(TIPOS).forEach((tipo,y)=>{t.posicionar(tipo,0,y);assert.equal(t.pronto,y===3);});
+});
+test('atirar em frota incompleta é rejeitado sem registrar tiro',()=>{const t=new Tabuleiro();t.posicionar('portaAvioes',0,0);rejeita(t,()=>t.atirar(0,0));});
+for(const [x,y] of [[-1,0],[10,0],[0,-1],[0,10],[0.5,0],['0',0],[null,0],[NaN,0],[Infinity,0]]) test(`coordenada inválida ${String(x)},${String(y)} é rejeitada na colocação e no tiro`,()=>{
+  const t=new Tabuleiro();rejeita(t,()=>t.posicionar('destroier',x,y));const p=preparar();rejeita(p,()=>p.atirar(x,y));
+});
+test('água registra uma única casa e não produz acertos ou tipo',()=>{const t=preparar();assert.deepEqual(t.atirar(9,9),{resultado:'agua'});assert.deepEqual([...t.tiros],['9,9']);assert.ok([...t.navios.values()].every(n=>n.acertos.size===0));});
+test('acerto parcial identifica o tipo e registra o segmento',()=>{const t=preparar();assert.deepEqual(t.atirar(0,0),{resultado:'acertou',tipo:'portaAvioes'});assert.deepEqual([...t.navios.get('portaAvioes').acertos],['0,0']);});
+for(const [tipo,n] of Object.entries(TIPOS)) test(`afundamento de ${tipo} só ocorre no segmento ${n}`,()=>{
+  const t=preparar(),y=Object.keys(TIPOS).indexOf(tipo);for(let x=0;x<n;x++)assert.deepEqual(t.atirar(x,y),{resultado:x===n-1?'afundou':'acertou',tipo});assert.equal(t.derrotado,false);
+});
+test('tiro repetido em água ou navio é rejeitado e não soma novo acerto',()=>{
+  const t=preparar();t.atirar(9,9);t.atirar(0,0);rejeita(t,()=>t.atirar(9,9));rejeita(t,()=>t.atirar(0,0));assert.equal(t.navios.get('portaAvioes').acertos.size,1);
+});
+test('todas as 86 casas de água continuam sendo água; não existe vitória sem 14 acertos',()=>{
+  const t=preparar(),ocupadas=new Set(casasFrota().map(p=>p.join(',')));
+  for(let y=0;y<10;y++)for(let x=0;x<10;x++)if(!ocupadas.has(`${x},${y}`))assert.deepEqual(t.atirar(x,y),{resultado:'agua'});
+  assert.equal(t.tiros.size,86);assert.equal(t.derrotado,false);
+});
+test('somente o 14º segmento da frota produz venceu e bloqueia novos tiros',()=>{
+  const t=preparar(),casas=casasFrota();casas.forEach(([x,y],i)=>{const r=t.atirar(x,y);assert.equal(r.resultado==='venceu',i===13);assert.equal(t.derrotado,i===13);});rejeita(t,()=>t.atirar(9,9));
+});
+test('partida inicia no jogador 0 e exige preparação de ambos',()=>{
+  const j=new BatalhaNaval();assert.equal(j.turno,0);assert.equal(j.vencedor,null);assert.equal(j.tabuleiros.length,2);assert.notStrictEqual(j.tabuleiros[0],j.tabuleiros[1]);
+  assert.throws(()=>j.atacar(0,0,0),Error);preparar(j.tabuleiros[1]);assert.throws(()=>j.atacar(0,0,0),Error);assert.equal(j.turno,0);
+});
+test('ataque modifica apenas o tabuleiro rival e alterna mesmo após acerto',()=>{
+  const j=new BatalhaNaval();j.tabuleiros.forEach(t=>preparar(t));assert.deepEqual(j.atacar(0,0,0),{resultado:'acertou',tipo:'portaAvioes'});
+  assert.equal(j.tabuleiros[0].tiros.size,0);assert.equal(j.tabuleiros[1].tiros.size,1);assert.equal(j.turno,1);j.atacar(1,9,9);assert.equal(j.turno,0);
+});
+test('turno incorreto e coordenada inválida preservam os dois tabuleiros e o turno',()=>{
+  const j=new BatalhaNaval();j.tabuleiros.forEach(t=>preparar(t));const antes=j.tabuleiros.map(fotografia);
+  for(const p of [-1,1,2,'0',null])assert.throws(()=>j.atacar(p,0,0),Error);assert.throws(()=>j.atacar(0,10,0),Error);assert.equal(j.turno,0);assert.deepEqual(j.tabuleiros.map(fotografia),antes);
+});
+test('repetição de tiro durante partida não consome a vez',()=>{
+  const j=new BatalhaNaval();j.tabuleiros.forEach(t=>preparar(t));j.atacar(0,9,9);j.atacar(1,9,9);assert.throws(()=>j.atacar(0,9,9),Error);assert.equal(j.turno,0);
+});
+for(const ganhador of [0,1]) test(`partida completa pode ser vencida pelo jogador ${ganhador}, sem ganhar turno extra`,()=>{
+  const j=new BatalhaNaval();j.tabuleiros.forEach(t=>preparar(t));const hits=casasFrota();let acertos=0,erros=0;
+  while(j.vencedor===null){const p=j.turno;if(p===ganhador){const [x,y]=hits[acertos++],r=j.atacar(p,x,y);assert.equal(r.resultado==='venceu',acertos===14);}else{j.atacar(p,9-(erros%10),9-Math.floor(erros/10));erros++;}}
+  assert.equal(j.vencedor,ganhador);assert.equal(acertos,14);const antes=j.tabuleiros.map(fotografia);assert.throws(()=>j.atacar(1-ganhador,8,8),Error);assert.deepEqual(j.tabuleiros.map(fotografia),antes);
+});
