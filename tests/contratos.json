@@ -1,0 +1,42 @@
+{
+  "tests/batalha.spec.js": {
+    "assinatura": {
+      "imports": "f428716bd7ff2d7dc78ae1ebb8271e70cd775867e1e83f79244815c4f55d7473",
+      "declaracoes": "00907c08c5f1450a9ab9e863a3435f1e3a03caa600a3023d7a523f02f7119c72",
+      "execucoes": "813c0b04f6f1546728d8b49a863c890f010af7031e635ffd3d8c60a7efb475d3"
+    },
+    "fixture": "tests/cenarios/batalha.js",
+    "assercoesExtraidas": 19,
+    "preparacoesExtraidas": 0
+  },
+  "tests/cpu-caca.spec.js": {
+    "assinatura": {
+      "imports": "0c0051b64966daece36fd5cb6f22c878f11a55fed4eec5e97876d609f388017d",
+      "declaracoes": "52a4eadaf677bc65b629b87ee416b6b9f5bf72f034bfcdcf244ddadd87bad474",
+      "execucoes": "f3c5767e87372a6561f8bc0072428734bfaae55bb979f245b972259e45946c1d"
+    },
+    "fixture": "tests/cenarios/cpu-caca.js",
+    "assercoesExtraidas": 3,
+    "preparacoesExtraidas": 0
+  },
+  "tests/fim-de-jogo.spec.js": {
+    "assinatura": {
+      "imports": "d9b2d467f53ffc63d2e616c169ebb556b752e3c665f5a5d7e9b490ff40bdbc54",
+      "declaracoes": "00907c08c5f1450a9ab9e863a3435f1e3a03caa600a3023d7a523f02f7119c72",
+      "execucoes": "0e458d3eb58abe012d5f32588b683306d5fcb930866d078918bae7e40e1db816"
+    },
+    "fixture": "tests/cenarios/fim-de-jogo.js",
+    "assercoesExtraidas": 11,
+    "preparacoesExtraidas": 0
+  },
+  "tests/posicionamento.spec.js": {
+    "assinatura": {
+      "imports": "60abac1349a4dee0971baacaac7574459983e8613af15e60625d8428d8bacfc8",
+      "declaracoes": "54f76b23974e2f82fb538138b3188f95165082c6b8cfd9b7b4412e5c1b99f3fb",
+      "execucoes": "afa3441eb375eb350dcfc37487606d884a942d1e9f23866dfd29712c5de5c5fd"
+    },
+    "fixture": "tests/cenarios/posicionamento.js",
+    "assercoesExtraidas": 38,
+    "preparacoesExtraidas": 0
+  }
+}
